@@ -1,5 +1,6 @@
 import express from "express";
 import { Thought } from "../models/Thought.js";
+import { auth } from "../middleware/auth.js";
 
 export const router = express.Router();
 
@@ -71,11 +72,16 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-/* POST /thoughts — create */
-router.post("/", async (req, res, next) => {
+/* POST /thoughts — create (AUTH) */
+router.post("/", auth, async (req, res, next) => {
   try {
     const { message, author, tags } = req.body;
-    const created = await Thought.create({ message, author, tags });
+    const created = await Thought.create({
+      message,
+      author,
+      tags,
+      owner: req.user.id, // attach owner
+    });
     res.status(201).json(created);
   } catch (err) {
     if (err.name === "ValidationError") return res.status(400).json({ error: err.message });
@@ -83,16 +89,23 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-/* PATCH /thoughts/:id — update */
-router.patch("/:id", async (req, res, next) => {
+/* PATCH /thoughts/:id — update (AUTH + owner only) */
+router.patch("/:id", auth, async (req, res, next) => {
   try {
     const { message, author, tags } = req.body;
-    const updated = await Thought.findByIdAndUpdate(
-      req.params.id,
-      { message, author, tags },
-      { new: true, runValidators: true }
-    );
-    if (!updated) return res.status(404).json({ error: "Thought not found" });
+
+    const thought = await Thought.findById(req.params.id);
+    if (!thought) return res.status(404).json({ error: "Thought not found" });
+
+    if (String(thought.owner) !== String(req.user.id)) {
+      return res.status(403).json({ error: "You can only edit your own thought" });
+    }
+
+    thought.message = message ?? thought.message;
+    thought.author = author ?? thought.author;
+    thought.tags = tags ?? thought.tags;
+
+    const updated = await thought.save();
     res.json(updated);
   } catch (err) {
     if (err.name === "ValidationError") return res.status(400).json({ error: err.message });
@@ -100,8 +113,8 @@ router.patch("/:id", async (req, res, next) => {
   }
 });
 
-/* POST /thoughts/:id/like — increment hearts */
-router.post("/:id/like", async (req, res, next) => {
+/* POST /thoughts/:id/like — increment hearts (AUTH) */
+router.post("/:id/like", auth, async (req, res, next) => {
   try {
     const updated = await Thought.findByIdAndUpdate(
       req.params.id,
@@ -115,11 +128,17 @@ router.post("/:id/like", async (req, res, next) => {
   }
 });
 
-/* DELETE /thoughts/:id — delete */
-router.delete("/:id", async (req, res, next) => {
+/* DELETE /thoughts/:id — delete (AUTH + owner only) */
+router.delete("/:id", auth, async (req, res, next) => {
   try {
-    const deleted = await Thought.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "Thought not found" });
+    const thought = await Thought.findById(req.params.id);
+    if (!thought) return res.status(404).json({ error: "Thought not found" });
+
+    if (String(thought.owner) !== String(req.user.id)) {
+      return res.status(403).json({ error: "You can only delete your own thought" });
+    }
+
+    await thought.deleteOne();
     res.status(204).end();
   } catch (err) {
     next(err);
