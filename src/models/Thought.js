@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 const ThoughtSchema = new mongoose.Schema(
   {
     message: {
@@ -10,18 +9,30 @@ const ThoughtSchema = new mongoose.Schema(
       maxlength: [140, "Message must be at most 140 characters"],
       trim: true,
     },
-    hearts: { type: Number, default: 0, min: [0, "Hearts cannot be negative"] },
+    hearts: {
+      type: Number,
+      default: 0,
+      min: [0, "Hearts cannot be negative"],
+    },
     tags: { type: [String], default: [] },
     author: { type: String, default: "Anonymous", trim: true },
     createdAt: { type: Date, default: Date.now },
+
+    // 🆕 New field for Week 3 (auth)
+    // References the User model; not required so older data still works
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
   },
   { versionKey: false }
 );
 
-
+// Indexes for faster sorting and filtering
 ThoughtSchema.index({ createdAt: -1 });
 ThoughtSchema.index({ hearts: -1 });
 ThoughtSchema.index({ message: "text" });
-
+ThoughtSchema.index({ owner: 1 }); // 🆕 Add index for owner field
 
 export const Thought = mongoose.model("Thought", ThoughtSchema);
