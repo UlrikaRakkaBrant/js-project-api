@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import listEndpoints from "express-list-endpoints";
 import { connectDB } from "./db.js";
 import { router as thoughtsRouter } from "./routes/thoughts.js";
+import { authRouter } from "./routes/auth.js";
 
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 });
 
 
+app.use("/auth", authRouter);
 app.use("/thoughts", thoughtsRouter);
 
 
