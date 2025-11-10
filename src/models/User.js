@@ -19,6 +19,4 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-UserSchema.index({ username: 1 }, { unique: true });
-
 export const User = mongoose.model("User", UserSchema);
