@@ -5,6 +5,10 @@ import { User } from "../models/User.js";
 
 export const authRouter = express.Router();
 
+authRouter.get("/health", (req, res) => {
+  res.json({ ok: true, routes: ["/auth/signup", "/auth/login"] });
+});
+
 /* POST /auth/signup */
 authRouter.post("/signup", async (req, res) => {
   try {
