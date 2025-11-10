@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth.js";
 
 
 dotenv.config();
+console.log("ENV CHECK → JWT_SECRET:", !!process.env.JWT_SECRET, "MONGO_URL:", !!process.env.MONGO_URL);
 
 
 const app = express();
