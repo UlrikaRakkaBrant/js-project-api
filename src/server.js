@@ -6,46 +6,77 @@ import { connectDB } from "./db.js";
 import { router as thoughtsRouter } from "./routes/thoughts.js";
 import { authRouter } from "./routes/auth.js";
 
-
 dotenv.config();
-
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// ─────────────────────────────────────────────
+// Middlewares
+// ─────────────────────────────────────────────
 
-app.use(cors());
+// Lite striktare CORS (men fortfarande öppet nog för ditt frontend)
+app.use(
+  cors({
+    origin: "*", // kan bytas till din Netlify-URL sen
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
+
 app.use(express.json());
 
+// ─────────────────────────────────────────────
+// Routes
+// ─────────────────────────────────────────────
 
 // Root — auto-docs
 app.get("/", (req, res) => {
-  const endpoints = listEndpoints(app).map((e) => ({ methods: e.methods, path: e.path }));
-  res.json({ name: "Happy Thoughts API (Week 2)", docs: endpoints });
+  const endpoints = listEndpoints(app).map((e) => ({
+    methods: e.methods,
+    path: e.path,
+  }));
+
+  res.json({
+    name: "Happy Thoughts API (Week 3 + Auth)",
+    docs: endpoints,
+  });
 });
 
+// Health-check (bra för Render / debugging)
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", time: new Date().toISOString() });
+});
 
 app.use("/auth", authRouter);
 app.use("/thoughts", thoughtsRouter);
 
+// ─────────────────────────────────────────────
+// 404 + Error handler
+// ─────────────────────────────────────────────
 
-// 404
-app.use((req, res) => res.status(404).json({ error: "Route not found" }));
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
-
-// Error handler
 app.use((err, req, res, next) => {
-  console.error(err); // visible in server logs
+  console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
+// ─────────────────────────────────────────────
+// Start server + DB
+// ─────────────────────────────────────────────
 
-// Start
 connectDB(process.env.MONGO_URL)
   .then(() => {
-    app.listen(PORT, () => console.log(`\n🚀 API running on http://localhost:${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`\n🚀 API running on http://localhost:${PORT}`);
+    });
   })
   .catch((err) => {
     console.error("Failed to connect to MongoDB:", err.message);
     process.exit(1);
   });
+
+// (valfritt: exportera app om du vill skriva tester)
+export default app;
