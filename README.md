@@ -1,254 +1,270 @@
-📦 Happy Thoughts API
+# 💖 Happy Thoughts API
 
-Ett fullständigt REST API byggt med Express, MongoDB, Mongoose, JWT-auth och bcrypt.
-Det används tillsammans med min Happy Thoughts-frontend.
+> _“The backend powering happiness — one joyful thought at a time.”_
 
-🌍 Live API
+A fully featured REST API built with **Express**, **MongoDB**, **Mongoose**, **JWT authentication**, and **bcrypt**.  
+This API supports user registration, login, posting happy thoughts, liking, updating, and deleting — all with secure ownership protection.
 
-Base URL:
+🌐 **Live API:**  
+**https://js-project-api-j7vv.onrender.com**
 
-https://js-project-api-j7vv.onrender.com
+---
 
-📘 Root documentation
+## 🧠 Overview
 
-API:et dokumenteras automatiskt via express-list-endpoints.
+This backend was created for the **Happy Thoughts** project, Technigo.  
+It includes:
 
-Besök:
+- 🗄️ Express server  
+- 🍃 MongoDB Atlas database  
+- 🔐 JWT authentication  
+- 👤 User accounts (signup + login)  
+- 💬 Thoughts CRUD routes  
+- ❤️ Like functionality  
+- 🚫 Owner-protected editing & deletion  
+- 🧪 Validations and error handling  
+- 🌱 Database seed support  
+- 🚀 Deployment on Render  
 
-GET /
+---
 
-⚙️ Tech Stack
+## ✨ Features
 
-Node.js + Express
+- ✍️ **Post thoughts** (5–140 characters)  
+- 🔐 **Secure authentication** (signup & login)  
+- 📝 **Only the owner can edit/delete** their thoughts  
+- ❤️ **Like any thought** (auth required)  
+- 🔍 **Filtering, sorting & pagination**  
+- 🔎 **Full text search** (`q=` parameter)  
+- 🧵 `tags` field supported  
+- 📜 Auto-generated docs at `/`  
+- 🌱 Optional database seeding with `data.json`  
 
-MongoDB Atlas + Mongoose
+---
 
-JWT (jsonwebtoken) för autentisering
+## 🧩 Tech Stack
 
-bcryptjs för lösenordshashning
+| Technology | Purpose |
+|-----------|----------|
+| 🚀 Express | Web server & routing |
+| 🍃 MongoDB Atlas | Cloud database |
+| 🧬 Mongoose | Models & validation |
+| 🔐 JSON Web Tokens | Authentication |
+| 🧂 bcryptjs | Password hashing |
+| 🌍 CORS | Cross-origin support |
+| ☁️ Render | Deployment |
+| 🧪 Node.js | JavaScript runtime |
+---
 
-CORS
+---
 
-Deploy: Render
+## 🪄 Getting Started (Local)
 
-🔐 Environment variables
-
-Din .env (inte inkluderad i GitHub) ska innehålla:
-
-MONGO_URL=din_atlas_connection_string
-JWT_SECRET=din_hemliga_sträng
-PORT=8080
-
-
-En mall finns i .env.example.
-
-🚀 Komma igång lokalt
-git clone https://github.com/UlrikaRakkaBrant/js-project-api.git
-cd js-project-api
+1️⃣ Install dependencies  
+```bash
 npm install
+```
+
+2️⃣ Start the development server  
+```bash
 npm run dev
+```
 
+Server runs at:  
+**http://localhost:8080**
 
-Servern startar på:
-
-http://localhost:8080
-
-🌱 Seed-databas (valfritt)
-
-Projektet innehåller ett seed.js script som fyller databasen med testdata.
-
+3️⃣ Seed the database (optional)  
+```bash
 npm run seed
+```
 
+4️⃣ Production start  
+```bash
+npm start
+```
 
-Detta:
+---
 
-raderar gamla thoughts
+## 🔐 Environment Variables
 
-lägger till nya från data.json
+Create a `.env` file based on `.env.example`:
 
-eller skapar default-data om data.json saknas
+```
+MONGO_URL=your_mongo_atlas_url
+JWT_SECRET=yoursecretstring
+PORT=8080
+```
 
-📚 Endpoints
-AUTH ROUTES
+---
 
-Alla tokens returneras som:
+## 📚 API Endpoints
 
-{
-  "userId": "....",
-  "username": "....",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
+### Root — Auto Docs  
+```
+GET /
+```
+Returns a full list of routes using **express-list-endpoints**.
 
-🔸 POST /auth/signup
+---
 
-Skapa en ny användare.
+# 🔐 Authentication
 
-Body:
+### ➕ POST /auth/signup  
+Create a new user.
 
-{
-  "username": "ulrika",
-  "password": "secret123"
-}
-
-
-Möjliga svar:
-
-201 Created
-
-400 Bad Request – saknade fält / för kort lösenord
-
-409 Conflict – username upptaget
-
-🔸 POST /auth/login
-
-Logga in och få token.
-
-Body:
-
+**Body:**
+```json
 {
   "username": "ulrika",
   "password": "secret123"
 }
+```
 
+---
 
-Möjliga svar:
+### 🔑 POST /auth/login  
+Log in a user and receive a JWT.
 
-200 OK
+**Body:**
+```json
+{
+  "username": "ulrika",
+  "password": "secret123"
+}
+```
 
-401 Unauthorized – felaktiga inloggningsuppgifter
+---
 
-💭 Thoughts routes
+# 💬 Thoughts Routes
 
-OBS: alla routes som skapar, ändrar eller raderar kräver Authorization header:
-
+**All modifying routes require:**  
+```
 Authorization: Bearer <token>
+```
 
-🔸 GET /thoughts
+---
 
-Lista alla thoughts.
+### 📥 GET /thoughts  
+Fetch thoughts with full filtering support:
 
-Stödjer:
+| Query | Description |
+|-------|-------------|
+| page | pagination |
+| limit | items per page |
+| q | full-text search |
+| minHearts | filter by hearts |
+| newerThan | ISO date filter |
+| tag | comma-separated tags |
+| sort | createdAt / hearts |
+| order | asc / desc |
 
-Query	Beskrivning
-page	sidnummer
-limit	antal per sida
-sort=createdAt/hearts	sortering
-order=asc/desc	stigande/fallande
-q=<text>	text-sökning
-minHearts=<num>	filtrera efter likes
-newerThan=<ISO-date>	filtrera efter datum
-tag=<tag1,tag2>	filtrera på taggar
+---
 
-Exempel:
+### 📄 GET /thoughts/:id  
+Fetch a single thought.
 
-GET /thoughts?page=1&limit=20&sort=createdAt&order=desc
+---
 
-🔸 GET /thoughts/:id
+### ✍️ POST /thoughts _(auth required)_  
+Create a new thought.
 
-Hämta en enskild thought.
-
-Svar:
-
-200 OK
-
-404 Not Found
-
-🔸 POST /thoughts (auth required)
-
-Skapa en ny thought kopplad till användaren.
-
+**Body:**
+```json
 {
-  "message": "Hello from the API!",
+  "message": "Hello world!",
   "author": "Ulrika",
-  "tags": ["api", "week3"]
+  "tags": ["fun"]
 }
+```
 
+---
 
-Svar:
+### 🛠️ PATCH /thoughts/:id _(auth + owner only)_  
+Update a thought you own.
 
-201 Created
+---
 
-400 Bad Request – valideringsfel (t.ex. message < 5 tecken)
+### ❌ DELETE /thoughts/:id _(auth + owner only)_  
+Delete a thought you own.
 
-🔸 PATCH /thoughts/:id (auth + owner required)
+---
 
-Uppdatera en thought endast om du äger den.
+### ❤️ POST /thoughts/:id/like _(auth required)_  
+Increase the `hearts` count.
 
-{
-  "message": "Updated message",
-  "tags": ["edited"]
-}
+---
 
+## 🧪 Error Handling
 
-Svar:
+| Status | Meaning |
+|--------|----------|
+| 400 | Validation error |
+| 401 | Unauthorized |
+| 403 | Forbidden (not owner) |
+| 404 | Not found |
+| 409 | Duplicate username |
+| 500 | Internal error |
 
-200 OK
+---
 
-403 Forbidden – inte ägaren
+## 🌱 Seed Script
 
-404 Not Found
+Run:
+```bash
+npm run seed
+```
 
-🔸 DELETE /thoughts/:id (auth + owner required)
+- Clears old thoughts  
+- Loads data from `data.json`  
+- Inserts fresh seed data  
 
-Radera en thought du äger.
+---
 
-Svar:
+## 🚀 Deployment (Render)
 
-204 No Content
+**Start command:**  
+```
+node src/server.js
+```
 
-403 Forbidden
+**Environment variables:**  
+- `MONGO_URL`
+- `JWT_SECRET`
+- `PORT=8080`
 
-404 Not Found
+Free-tier instances hibernate — first request may take a few seconds.
 
-🔸 POST /thoughts/:id/like (auth required)
+---
 
-Likea en thought (ökar hearts med 1).
+## 📱 Frontend Integration
 
-Svar:
+This API supports all features needed by a Happy Thoughts React frontend:
 
-200 OK
+- Signup & Login  
+- Authenticated posting  
+- Liking  
+- Editing & deleting (owner only)  
+- Showing error messages  
+- Pagination, filtering, and search  
 
-404 Not Found
+---
 
-🧪 Felkoder (sammanfattning)
-Kod	Används när
-400	Valideringsfel, ogiltig input
-401	Felaktiga login-uppgifter / saknar token
-403	Försök att ändra/radera någons annan thought
-404	Thought eller route saknas
-409	Username upptaget
-500	Internt fel
-🏁 Projektets krav (Checklista)
+## 👩‍💻 Author
 
- Dokumentation på /
+Built with 💖, ☕, curiosity, and collaborative help from **ChatGPT** by **Ulrika Einerbrant**.  
+Frontend developer passionate about accessible, joyful user experiences.
 
- GET /thoughts
+---
 
- GET /thoughts/:id
+## 🪶 License
 
- POST /thoughts (auth)
+Released under the **MIT License**.
 
- PATCH /thoughts/:id (auth + owner)
+---
 
- DELETE /thoughts/:id (auth + owner)
+## ⭐ Connect
 
- POST /thoughts/:id/like
-
- Signup / Login
-
- JWT-auth
-
- Mongoose modeller med validering
-
- Lösenord hashas med bcrypt
-
- Error-handling
-
- API deployat på Render
-
- Frontend kan ansluta med både login och CRUD
-
-🎉 Tack!
-
-Det här API:et är byggt med fokus på tydlighet, validering, felhantering och bra struktur.
-Det fungerar fullt ut tillsammans med min Happy Thoughts-frontend.
+🌐 **API Live:** https://js-project-api-j7vv.onrender.com  
+💻 **GitHub Repo:** https://github.com/UlrikaRakkaBrant/js-project-api  
+🧭 **Portfolio:** https://ulrikasportfolio.netlify.app  
+💼 **LinkedIn:** https://www.linkedin.com/in/ulrika-einebrant/
