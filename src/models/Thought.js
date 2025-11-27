@@ -19,11 +19,10 @@ const ThoughtSchema = new mongoose.Schema(
     createdAt: { type: Date, default: Date.now },
 
     // 🆕 New field for Week 3 (auth)
-    // References the User model; not required so older data still works
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: true,
     },
   },
   { versionKey: false }
