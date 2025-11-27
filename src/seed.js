@@ -11,36 +11,54 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const run = async () => {
-  await connectDB(process.env.MONGO_URL);
+  try {
+    console.log("🌱 Connecting to MongoDB...");
+    await connectDB(process.env.MONGO_URL);
 
-  const jsonPath = path.join(__dirname, "../data.json");
-  const raw = fs.existsSync(jsonPath) ? fs.readFileSync(jsonPath, "utf8") : "[]";
-  const items = JSON.parse(raw);
+    // Load optional data.json
+    const jsonPath = path.join(__dirname, "../data.json");
+    const raw = fs.existsSync(jsonPath) ? fs.readFileSync(jsonPath, "utf8") : "[]";
+    const items = JSON.parse(raw);
 
-  await Thought.deleteMany({}); // clear existing data
+    console.log("🗑️ Clearing existing thoughts...");
+    await Thought.deleteMany({});
 
-  const docs = items.map((t) => ({
-    message: t.message || t.text || "Hello world!",
-    hearts: Number(t.hearts) || 0,
-    tags: t.tags || [],
-    author: t.author || "Anonymous",
-    createdAt: t.createdAt ? new Date(t.createdAt) : undefined,
-  }));
+    // Prepare documents → but do NOT set owner (only created thoughts should have owners)
+    const docs = items.map((t) => ({
+      message: t.message || t.text || "Hello world!",
+      hearts: Number(t.hearts) || 0,
+      tags: t.tags || [],
+      author: t.author || "Anonymous",
+      createdAt: t.createdAt ? new Date(t.createdAt) : undefined,
+    }));
 
-  await Thought.insertMany(
-    docs.length
+    const seedData = docs.length
       ? docs
       : [
-        { message: "First happy thought!", hearts: 3, tags: ["intro"], author: "Ada" },
-        { message: "Coffee + code = ❤️", hearts: 8, tags: ["coffee", "code"], author: "Linus" },
-      ]
-  );
+        {
+          message: "First happy thought!",
+          hearts: 3,
+          tags: ["intro"],
+          author: "Ada",
+        },
+        {
+          message: "Coffee + code = ❤️",
+          hearts: 8,
+          tags: ["coffee", "code"],
+          author: "Linus",
+        },
+      ];
 
-  console.log("✅ Seeded thoughts");
-  process.exit(0);
+    console.log(`🌼 Seeding ${seedData.length} thoughts...`);
+    await Thought.insertMany(seedData);
+
+    console.log("✨ Done! Thoughts have been seeded.");
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Seeding failed:");
+    console.error(err);
+    process.exit(1);
+  }
 };
 
-run().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+run();
