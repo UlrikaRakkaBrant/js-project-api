@@ -15,10 +15,6 @@ const signToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: TOKEN_TTL });
 };
 
-authRouter.get("/health", (_req, res) => {
-  res.json({ ok: true, routes: ["/auth/signup", "/auth/login"] });
-});
-
 /* POST /auth/signup */
 authRouter.post("/signup", async (req, res) => {
   try {
