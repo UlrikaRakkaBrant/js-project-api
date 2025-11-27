@@ -97,7 +97,7 @@ router.patch("/:id", auth, async (req, res, next) => {
     const thought = await Thought.findById(req.params.id);
     if (!thought) return res.status(404).json({ error: "Thought not found" });
 
-    if (String(thought.owner) !== String(req.user.id)) {
+    if (!thought.owner || String(thought.owner) !== String(req.user.id)) {
       return res.status(403).json({ error: "You can only edit your own thought" });
     }
 
@@ -134,8 +134,8 @@ router.delete("/:id", auth, async (req, res, next) => {
     const thought = await Thought.findById(req.params.id);
     if (!thought) return res.status(404).json({ error: "Thought not found" });
 
-    if (String(thought.owner) !== String(req.user.id)) {
-      return res.status(403).json({ error: "You can only delete your own thought" });
+    if (!thought.owner || String(thought.owner) !== String(req.user.id)) {
+      return res.status(403).json({ error: "You can only edit your own thought" });
     }
 
     await thought.deleteOne();
