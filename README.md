@@ -10,25 +10,6 @@ This API supports user registration, login, posting happy thoughts, liking, upda
 
 ---
 
-## 🏗️ Architecture
-
-```mermaid
-flowchart TD
-    User[🙂 User in browser] -->|Types & clicks| ReactApp[💖 Happy Thoughts Frontend (React)]
-    ReactApp -->|HTTPS fetch()| API[🧠 Happy Thoughts API (Express on Render)]
-    API -->|Mongoose queries| DB[(🍃 MongoDB Atlas)]
-
-    subgraph Frontend
-      ReactApp
-    end
-
-    subgraph Backend
-      API --> Auth[🔐 Auth (JWT + bcrypt)]
-      API --> Thoughts[💬 Thoughts routes]
-    end
-
----
-
 ## 🧠 Overview
 
 This backend was created for the **Happy Thoughts** project, Technigo.  
