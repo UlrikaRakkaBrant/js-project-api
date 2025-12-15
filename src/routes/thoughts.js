@@ -75,19 +75,28 @@ router.get("/:id", async (req, res, next) => {
 /* POST /thoughts — create (AUTH) */
 router.post("/", auth, async (req, res, next) => {
   try {
-    const { message, author, tags } = req.body;
-    const created = await Thought.create({
+    const { message, tags } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const thought = await Thought.create({
       message,
-      author,
       tags,
-      owner: req.user.id, // attach owner
+      author: req.user.username, // 👈 comes from JWT
+      owner: req.user.id,        // 👈 secure ownership
     });
-    res.status(201).json(created);
+
+    res.status(201).json(thought);
   } catch (err) {
-    if (err.name === "ValidationError") return res.status(400).json({ error: err.message });
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: err.message });
+    }
     next(err);
   }
 });
+
 
 /* PATCH /thoughts/:id — update (AUTH + owner only) */
 router.patch("/:id", auth, async (req, res, next) => {
